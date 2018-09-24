@@ -6,9 +6,4 @@ void syscall_init (void);
 
 void sys_exit (int);
 
-#ifdef VM
-// expose munmap() so it can be call in sys_exit();
-bool sys_munmap (mmapid_t);
-#endif
-
 #endif /* userprog/syscall.h */

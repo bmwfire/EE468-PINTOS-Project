@@ -72,7 +72,7 @@ oid sys_halt(void) {
 
 void sys_exit(int status) {
   printf("%s: exit(%d)\n", thread_current()->name, status);
-
+  
   // The process exits.
   // wake up the parent process (if it was sleeping) using semaphore,
   // and pass the return code.
@@ -84,6 +84,5 @@ void sys_exit(int status) {
     // pcb == NULL probably means that previously
     // page allocation has failed in process_execute()
   }
-
   thread_exit();
 }

@@ -25,6 +25,9 @@ struct thread_file
     int fd; // the file descriptor for the file in its respective thread
     struct file file_struct; // structure for file
     struct list_elem list_elem_struct; // the structure for the list element
+ /* use list_entry defined in list.h: Converts pointer to list element LIST_ELEM into a pointer to the structure
+  * that LIST_ELEM is embedded inside.  Supply the name of the outer structure STRUCT and the member name MEMBER
+  * of the list element.*/
 };
 
 void 
@@ -140,7 +143,7 @@ int sys_open(char * file)
     // from pintos notes section 3.3.4 System calls: when a single file is opened more than once, whether by a single
     // process or different processes each open returns a new file descriptor. Different file descriptors for a single
     // file are closed independently in seperate calls to close and they do not share a file position. We should make a
-    // global list of files so if a single file is opened more than once we can close it without conflicts.
+    // list of files so if a single file is opened more than once we can close it without conflicts.
     struct thread_file * new_thread_file = malloc(sizeof(struct thread_file));
     new_thread_file->file_struct = new_file_struct;
     new_thread_file->fd = thread_current()->next_fd;

@@ -137,20 +137,17 @@ int sys_open(char * file)
     // nothing to do here open fails, return -1
     return -1;
   }
-  else
-  {
-    // else add file to current threads list of open files
-    // from pintos notes section 3.3.4 System calls: when a single file is opened more than once, whether by a single
-    // process or different processes each open returns a new file descriptor. Different file descriptors for a single
-    // file are closed independently in seperate calls to close and they do not share a file position. We should make a
-    // list of files so if a single file is opened more than once we can close it without conflicts.
-    struct thread_file * new_thread_file = malloc(sizeof(struct thread_file));
-    new_thread_file->file_struct = new_file_struct;
-    new_thread_file->fd = thread_current()->next_fd;
-    thread_current()->next_fd++;
-    list_push_back(&thread_current()->open_files, &new_thread_file->list_elem_struct);
-    return new_thread_file->fd;
-  }
+  // else add file to current threads list of open files
+  // from pintos notes section 3.3.4 System calls: when a single file is opened more than once, whether by a single
+  // process or different processes each open returns a new file descriptor. Different file descriptors for a single
+  // file are closed independently in seperate calls to close and they do not share a file position. We should make a
+  // list of files so if a single file is opened more than once we can close it without conflicts.
+  struct thread_file * new_thread_file = malloc(sizeof(struct thread_file));
+  new_thread_file->file_struct = new_file_struct;
+  new_thread_file->fd = thread_current()->next_fd;
+  thread_current()->next_fd++;
+  list_push_back(&thread_current()->open_files, &new_thread_file->list_elem_struct);
+  return new_thread_file->fd;
 }
 
 int sys_exec (const char *cmdline){

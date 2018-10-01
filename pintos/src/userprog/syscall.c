@@ -23,7 +23,7 @@ struct lock filesys_lock;
 struct thread_file
 {
     int fd; // the file descriptor for the file in its respective thread
-    struct file file_struct; // structure for file
+    struct file* file_struct; // structure for file
     struct list_elem list_elem_struct; // the structure for the list element
  /* use list_entry defined in list.h: Converts pointer to list element LIST_ELEM into a pointer to the structure
   * that LIST_ELEM is embedded inside.  Supply the name of the outer structure STRUCT and the member name MEMBER
@@ -132,8 +132,8 @@ int sys_open(char * file)
   // all done with file sys for now
   lock_release(&filesys_lock);
 
-  // f will be null if file not found in file system
-  if (f==NULL){
+  // file will be null if file not found in file system
+  if (file==NULL){
     // nothing to do here open fails, return -1
     return -1;
   }

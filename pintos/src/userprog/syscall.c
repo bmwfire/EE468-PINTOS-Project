@@ -16,8 +16,16 @@
 static void syscall_handler (struct intr_frame *);
 void sys_exit (int);
 int sys_exec (const char *cmdline);
+int sys_open(char * file);
 
 struct lock filesys_lock;
+
+struct thread_file
+{
+    int fd; // the file descriptor for the file in its respective thread
+    struct file file_struct; // structure for file
+    struct list_elem list_elem_struct; // the structure for the list element
+};
 
 void 
 syscall_init (void) 
@@ -83,6 +91,19 @@ syscall_handler (struct intr_frame *f)
       f->eax = sys_exec((const char *)*(stack + 1));
       break;
     }
+  case SYS_OPEN:
+    {
+      // syscall1: Validate the pointer to the first and only argument on the stack
+      if(!is_valid_ptr((void*)(stack + 1)))
+        sys_exit(-1);
+
+      // Validate the dereferenced pointer to the buffer holding the filename
+      if(!is_valid_buffer((char *)*(stack + 1)))
+        sys_exit(-1);
+
+      // set return value of sys call to the file descriptor
+      f->eax = sys_open((char *)*(stack + 1));
+    }
       
   /* unhandled case */
   default:
@@ -94,6 +115,40 @@ syscall_handler (struct intr_frame *f)
   }
 }
 
+/* Opens the file called file. Returns a nonnegative integer handle called a "file descriptor" or -1 if the file could
+ * not be opened. The file descriptor will be the integer location of the file in the current thread's list of files
+ * */
+int sys_open(char * file)
+{
+  // obtain lock for filesystem since we are about to open the file
+  lock_acquire(&filesys_lock);
+
+  // open the file
+  struct file * new_file_struct = filesys_open(file);
+
+  // all done with file sys for now
+  lock_release(&filesys_lock);
+
+  // f will be null if file not found in file system
+  if (f==NULL){
+    // nothing to do here open fails, return -1
+    return -1;
+  }
+  else
+  {
+    // else add file to current threads list of open files
+    // from pintos notes section 3.3.4 System calls: when a single file is opened more than once, whether by a single
+    // process or different processes each open returns a new file descriptor. Different file descriptors for a single
+    // file are closed independently in seperate calls to close and they do not share a file position. We should make a
+    // global list of files so if a single file is opened more than once we can close it without conflicts.
+    struct thread_file * new_thread_file = malloc(sizeof(struct thread_file));
+    new_thread_file->file_struct = new_file_struct;
+    new_thread_file->fd = thread_current()->next_fd;
+    thread_current()->next_fd++;
+    list_push_back(&thread_current()->open_files, &new_thread_file->list_elem_struct);
+    return new_thread_file->fd;
+  }
+}
 
 int sys_exec (const char *cmdline){
   char * cmdline_cp;

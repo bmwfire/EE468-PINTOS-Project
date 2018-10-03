@@ -15,7 +15,7 @@
 
 static void syscall_handler (struct intr_frame *);
 void sys_exit (int);
-int sys_exec (const char *cmdline);
+pid_t sys_exec (const char *cmdline);
 int sys_open(char * file);
 
 struct lock filesys_lock;
@@ -91,7 +91,7 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       // pointers are valid, call sys_exec and save result to eax for the interrupt frame
-      f->eax = sys_exec((const char *)*(stack + 1));
+      f->eax = (uint32_t)sys_exec((const char *)*(stack + 1));
       break;
     }
   case SYS_OPEN:
@@ -105,7 +105,7 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       // set return value of sys call to the file descriptor
-      f->eax = sys_open((char *)*(stack + 1));
+      f->eax = (uint32_t)sys_open((char *)*(stack + 1));
     }
       
   /* unhandled case */
@@ -150,12 +150,12 @@ int sys_open(char * file)
   return new_thread_file->fd;
 }
 
-int sys_exec (const char *cmdline){
+pid_t sys_exec (const char *cmdline){
   char * cmdline_cp;
   char * ptr;
   char * file_name;
   struct file * f;
-  int return_value;
+  pid_t return_value;
   // copy command line to parse and obtain filename to open
   cmdline_cp = malloc(strlen(cmdline)+1);
   strlcpy(cmdline_cp, cmdline, strlen(cmdline)+1);
@@ -175,12 +175,12 @@ int sys_exec (const char *cmdline){
   if (f==NULL){
     // nothing to do here exec fails, release lock and return -1
     lock_release(&filesys_lock);
-    return -1;
+    return (pid_t)-1;
   } else {
     // file exists, we can close file and call our implemented process_execute() to run the executable
     // note that process_execute accesses filesystem so hold onto lock until it is complete
     file_close(f);
-    return_value = process_execute(cmdline);
+    return_value = (pid_t)process_execute(cmdline);
     lock_release(&filesys_lock);
     return return_value;
   }

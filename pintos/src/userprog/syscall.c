@@ -47,8 +47,8 @@ static void fail_invalid_access(void) {
 }
 
 static void
-syscall_handler (struct intr_frame *f)
-{
+syscall_handler (struct intr_frame *f){
+
   int syscall_number;
   ASSERT( sizeof(syscall_number) == 4 ); // assuming x86
 
@@ -216,8 +216,7 @@ put_user (uint8_t *udst, uint8_t byte) {
  * In case of invalid memory access, exit() is called and consequently
  * the process is terminated with return code -1.
  */
-static int
-memread_user (void *src, void *dst, size_t bytes)
+static int memread_user (void *src, void *dst, size_t bytes)
 {
   int32_t value;
   size_t i;

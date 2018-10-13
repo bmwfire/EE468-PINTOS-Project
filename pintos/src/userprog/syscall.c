@@ -191,19 +191,6 @@ void sys_halt(void) {
 }
 
 void sys_exit(int status) {
-  printf("%s: exit(%d)\n", thread_current()->name, status);
-  
-  // The process exits.
-  // wake up the parent process (if it was sleeping) using semaphore,
-  // and pass the return code.
-  struct process_control_block *pcb = thread_current()->pcb;
-  if(pcb != NULL) {
-    pcb->exitcode = status;
-  }
-  else {
-    // pcb == NULL probably means that previously
-    // page allocation has failed in process_execute()
-  }
   thread_exit();
 }
 

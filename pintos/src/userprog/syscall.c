@@ -49,7 +49,6 @@ struct file_descriptor{
   struct list_elem elem;
 };
 
-struct lock fs_lock;
 // struct list open_files;
 struct lock filesys_lock;
 
@@ -192,7 +191,7 @@ syscall_handler (struct intr_frame *f)
       f->eax = sys_exec((const char *)*(stack + 1));
       break;
     }
-      
+
   /* unhandled case */
   default:
     printf("[ERROR] a system call is unimplemented!\n");
@@ -287,15 +286,15 @@ int sys_write(int fd, const void *buffer, unsigned size) {
   struct file_descriptor *fd_struct;
   int bytes_written = 0;
 
-  lock_acquire(&fs_lock);
+  lock_acquire(&filesys_lock);
 
   if(fd == STDIN_FILENO){
-    lock_release(&fs_lock);
+    lock_release(&filesys_lock);
     return -1;
   }
   if(fd == STDOUT_FILENO){
     putbuf (buffer, size);
-    lock_release(&fs_lock);
+    lock_release(&filesys_lock);
     return size;
   }
 
@@ -304,7 +303,7 @@ int sys_write(int fd, const void *buffer, unsigned size) {
     bytes_written = file_write(fd_struct->file_struct, buffer, size);
   }
 
-  lock_release(&fs_lock);
+  lock_release(&filesys_lock);
   return bytes_written;
 }
 

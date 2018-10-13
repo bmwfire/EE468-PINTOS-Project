@@ -277,7 +277,7 @@ load (const char *cmdline, void (**eip) (void), void **esp)
       || ehdr.e_phnum > 1024)
     {
       printf ("load: %s: error loading executable\n", file_name);
-      goto done; 
+      goto done;
     }
 
   /* Read program headers. */
@@ -482,70 +482,70 @@ setup_stack (void **esp, char *bufptr)
   if (kpage != NULL)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
+      if (success){
         *esp = PHYS_BASE;
+
+          /* parse cmd line */
+          cmdline_cp = (char *) malloc(strlen(cmdline) + 1);
+          strlcpy(cmdline_cp, cmdline, strlen(cmdline) + 1);
+
+          for (token = strtok_r (cmdline_cp, " ", &save_ptr); token != NULL;
+               token = strtok_r (NULL, " ", &save_ptr))
+               argc++;
+
+          /* allocate enough memory for argv */
+          argv = (char **)malloc(argc * sizeof(char*) + 1);
+
+          /* push args onto stack and last time using cmdline so no new copy */
+          i = 0;
+          for (token = strtok_r (cmdline, " ", &save_ptr); token != NULL;
+               token = strtok_r (NULL, " ", &save_ptr))
+            {
+              *esp -= strlen(token) + 1;
+              memcpy(*esp, token, strlen(token) + 1);
+              argv[i] = *esp;
+              i++ ;
+            }
+
+          /* push argv pointers onto stack with 0 padding */
+          argv[argc] = 0;
+
+          /* add necessary padding for word size, that is 4-bytes */
+          i = (size_t) *esp % 4;
+          if (i > 0)
+            {
+              *esp -= i;
+              memcpy(*esp, &argv[argc], i);
+            }
+
+          for (i = argc; i >=0; i--)
+            {
+              *esp -= sizeof(char*);
+              memcpy(*esp, &argv[i], sizeof(char*));
+            }
+
+          /* push argv itself */
+          char ** ptr = *esp;
+          *esp -= sizeof(char **);
+          memcpy(*esp, &ptr, sizeof(char**));
+
+          /* push argc */
+          *esp -= sizeof(int);
+          memcpy(*esp, &argc, sizeof(int));
+
+          /* push return address (0s)*/
+          *esp -= sizeof(void*);
+          memcpy(*esp, &argv[argc], sizeof(void*));
+
+          /* free argv and cmdline cp*/
+          free(argv);
+          free(cmdline_cp);
+
+          hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
+      }
       else
         palloc_free_page (kpage);
     }
-
-  /* parse cmd line */
-  cmdline_cp = (char *) malloc(strlen(cmdline) + 1);
-  strlcpy(cmdline_cp, cmdline, strlen(cmdline) + 1);
-
-  for (token = strtok_r (cmdline_cp, " ", &save_ptr); token != NULL;
-       token = strtok_r (NULL, " ", &save_ptr))
-       argc++;
-
-  /* allocate enough memory for argv */
-  argv = (char **)malloc(argc * sizeof(char*) + 1);
-
-  /* push args onto stack and last time using cmdline so no new copy */
-  i = 0;
-  for (token = strtok_r (cmdline, " ", &save_ptr); token != NULL;
-       token = strtok_r (NULL, " ", &save_ptr))
-    {
-      *esp -= strlen(token) + 1;
-      memcpy(*esp, token, strlen(token) + 1);
-      argv[i] = *esp;
-      i++ ;
-    }
-
-  /* push argv pointers onto stack with 0 padding */
-  argv[argc] = 0;
-
-  /* add necessary padding for word size, that is 4-bytes */
-  i = (size_t) *esp % 4;
-  if (i > 0)
-    {
-      *esp -= i;
-      memcpy(*esp, &argv[argc], i);
-    }
-
-  for (i = argc; i >=0; i--)
-    {
-      *esp -= sizeof(char*);
-      memcpy(*esp, &argv[i], sizeof(char*));
-    }
-
-  /* push argv itself */
-  char ** ptr = *esp;
-  *esp -= sizeof(char **);
-  memcpy(*esp, &ptr, sizeof(char**));
-
-  /* push argc */
-  *esp -= sizeof(int);
-  memcpy(*esp, &argc, sizeof(int));
-
-  /* push return address (0s)*/
-  *esp -= sizeof(void*);
-  memcpy(*esp, &argv[argc], sizeof(void*));
-
-  /* free argv and cmdline cp*/
-  free(argv);
-  free(cmdline_cp);
-
-  hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
-
   return success;
 }
 

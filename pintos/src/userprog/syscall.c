@@ -115,7 +115,7 @@ syscall_handler (struct intr_frame *f)
           f->eax = (uint32_t) sys_write((int) *(esp+1), (const void*) *(esp+2), (unsigned) *(esp+3));
         else{
           if(!is_valid_ptr((const void*)(*(esp+2)))){
-            printf("Write: %s \n", (char *)(esp + 2));
+            printf("write: %x \n", (esp));
             printf("write: %x \n", (esp + 2));
             printf("write: %x \n", *(esp + 2));
             printf("WRITE: *(esp+2) invalid \n");

@@ -27,6 +27,7 @@
 
 static void syscall_handler (struct intr_frame *);
 void sys_exit (int);
+void sys_halt(void);
 int sys_exec (const char *cmdline);
 
 struct lock filesys_lock;
@@ -72,15 +73,9 @@ syscall_handler (struct intr_frame *f)
 {
   uint32_t *esp;
   printf("SYSCALL: Entered syscall\n");
-  //int syscall_number;
-  //ASSERT( sizeof(syscall_number) == 4 ); // assuming x86
 
   // The system call number is in the 32-bit word at the caller's stack pointer.
-  //memread_user(f->esp, &syscall_number, sizeof(syscall_number));
 
-  // Store the esp, which is needed in the page fault handler.
-  // refer to exception.c:page_fault() (see manual 4.3.3)
-  //thread_current()->current_esp = f->esp;
   esp = f->esp;
   printf("SYSCALL: esp is %d\n", *esp);
   if(!is_valid_ptr(esp)){
@@ -179,16 +174,16 @@ syscall_handler (struct intr_frame *f)
   case SYS_EXEC:
     {
       // Validate the pointer to the first argument on the stack
-      if(!is_valid_ptr(stack + 1))
+      if(!is_valid_ptr(*esp + 1))
         sys_exit(-1);
 
       // Validate the buffer that the first argument is pointing to, this is a pointer to the command line args
       // that include the filename and additional arguments for process execute
-      if(!is_valid_ptr((void *)*(stack + 1)))
+      if(!is_valid_ptr((void *)*(*esp + 1)))
         sys_exit(-1);
 
       // pointers are valid, call sys_exec and save result to eax for the interrupt frame
-      f->eax = sys_exec((const char *)*(stack + 1));
+      f->eax = sys_exec((const char *)*(*esp + 1));
       break;
     }
 

@@ -494,7 +494,7 @@ setup_stack (void **esp, char *bufptr)
                argc++;
 
           /* allocate enough memory for argv */
-          argv = (char **)malloc(argc * sizeof(char*) + 1);
+          argv = (char **)malloc(argc * 4 + 1);
 
           /* push args onto stack and last time using cmdline so no new copy */
           i = 0;
@@ -520,26 +520,28 @@ setup_stack (void **esp, char *bufptr)
 
           for (i = argc; i >=0; i--)
             {
-              *esp -= sizeof(char*);
-              memcpy(*esp, &argv[i], sizeof(char*));
+              *esp -= 4;
+              memcpy(*esp, &argv[i], 4);
             }
 
           /* push argv itself */
           char ** ptr = *esp;
-          *esp -= sizeof(char **);
+          *esp -= 4;
           memcpy(*esp, &ptr, sizeof(char**));
 
           /* push argc */
-          *esp -= sizeof(int);
+          *esp -= 4;
           memcpy(*esp, &argc, sizeof(int));
 
           /* push return address (0s)*/
-          *esp -= sizeof(void*);
+          *esp -= 4;
           memcpy(*esp, &argv[argc], sizeof(void*));
 
           /* free argv and cmdline cp*/
           free(argv);
           free(cmdline_cp);
+
+          printf("SETUPSTACK: esp = %x\n", esp)
 
           hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
       }

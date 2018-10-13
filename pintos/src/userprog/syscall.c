@@ -116,6 +116,7 @@ syscall_handler (struct intr_frame *f)
         else{
           if(!is_valid_ptr((const void*)(*(esp+2)))){
             printf("WRITE: *(esp+2) invalid \n");
+            printf("WRITE: *(esp+2): %s\n", *(esp+2));
           }
           if(!is_valid_ptr((const void*)((*(esp+2)+*(esp+3)-1)))){
             printf("WRITE: *(*(esp+2)+*(esp+3)-1) invalid \n");
@@ -224,7 +225,7 @@ bool is_valid_ptr(const void *user_ptr)
   struct thread *curr = thread_current();
   if(user_ptr != NULL && is_user_vaddr(user_ptr))
   {
-    return (pagedir_get_page(curr->pagedir, user_ptr)) != NULL;//TODO FIX THIS
+    return (pagedir_get_page(curr->pagedir, user_ptr)) != NULL;
   }
   if(user_ptr == NULL){
     printf("Pointer is NULL\n");

@@ -115,9 +115,10 @@ syscall_handler (struct intr_frame *f)
           f->eax = (uint32_t) sys_write((int) *(esp+1), (const void*) *(esp+2), (unsigned) *(esp+3));
         else{
           if(!is_valid_ptr((const void*)(*(esp+2)))){
-            printf("write: %x \n", (esp));
-            printf("write: %x \n", (esp + 2));
-            printf("write: %x \n", *(esp + 2));
+            printf("write: esp %x \n", (esp));
+            printf("write: esp + 2 %x \n", (esp + 2));
+            printf("write: *(esp + 2) hex %x \n", *(esp + 2));
+            printf("write: *(esp + 1) %d \n", *(esp + 1));
             printf("WRITE: *(esp+2) invalid \n");
           }
           if(!is_valid_ptr((const void*)((*(esp+2)+*(esp+3)-1)))){

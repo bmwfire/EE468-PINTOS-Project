@@ -34,11 +34,9 @@ struct lock filesys_lock;
 
 
 static void check_user (const uint8_t *uaddr);
-static int32_t get_user (const uint8_t *uaddr);
 bool is_valid_ptr(const void *user_ptr);
 //void sys_halt();
 
-static int memread_user (void *src, void *dst, size_t bytes);
 enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
 // static struct file_desc* find_file_desc(struct thread *, int fd, enum fd_search_filter flag);
 struct file_descriptor * retrieve_file(int fd);
@@ -87,49 +85,12 @@ syscall_handler (struct intr_frame *f)
   switch (*esp) {
   case SYS_HALT: // 0
     {
-      // sys_halt();
-      NOT_REACHED();
+      sys_halt();
       break;
     }
-
-  case SYS_EXIT:
+  case SYS_EXIT: // 1
     {
-      //int exitcode;
-      //memread_user(f->esp + 4, &exitcode, sizeof(exitcode));
       is_valid_ptr(f->esp+1);
-      //sys_exit(f->esp+1);
-      //NOT_REACHED();
-      break;
-    }
-
-  case SYS_WAIT:
-    {
-      pid_t pid;
-      //int pid;
-      memread_user(f->esp + 4, &pid, sizeof(int));//if pid_t gets working, change int to pid_t
-      int ret = process_wait(pid);
-      f->eax = (uint32_t) ret;
-      break;
-    }
-
-  case SYS_TELL:
-    {
-      // int fd;
-      // unsigned ret;
-      //
-      // memread_user(f->esp + 4, &fd, sizeof(fd));
-      //
-      // lock_acquire (&filesys_lock);
-      // struct file_desc* file_d = find_file_desc(thread_current(), fd, FD_FILE);
-      //
-      // if(file_d && file_d->file) {
-      //   ret = file_tell(file_d->file);
-      // }
-      // else
-      //   ret = -1;
-      //
-      // lock_release (&filesys_lock);
-      // f->eax = (uint32_t) ret;
       break;
     }
   case SYS_REMOVE:
@@ -137,8 +98,6 @@ syscall_handler (struct intr_frame *f)
       const char* filename;
       bool ret;
 
-      memread_user(f->esp + 4, &filename, sizeof(filename));
-      check_user((const uint8_t*) filename);
       lock_acquire (&filesys_lock);
       ret = filesys_remove(filename);
       lock_release (&filesys_lock);
@@ -170,11 +129,10 @@ syscall_handler (struct intr_frame *f)
       }
       break;
     }
-
   case SYS_EXEC:
     {
       // Validate the pointer to the first argument on the stack
-      if(!is_valid_ptr((void*)*(esp + 1))
+      if(!is_valid_ptr((void*)*(esp + 1)))
         sys_exit(-1);
 
       // Validate the buffer that the first argument is pointing to, this is a pointer to the command line args
@@ -320,14 +278,6 @@ struct file_descriptor * retrieve_file(int fd){
 }
 
 
-
-static void
-check_user (const uint8_t *uaddr) {
-
-  if(get_user (uaddr) == -1)
-    fail_invalid_access();
-}
-
 // static struct file_desc*
 // find_file_desc(struct thread *t, int fd, enum fd_search_filter flag)
 // {
@@ -356,33 +306,3 @@ check_user (const uint8_t *uaddr) {
 //
 //   return NULL; // not found
 // }
-
-static int32_t
-get_user (const uint8_t *uaddr) {
-  // check that a user pointer `uaddr` points below PHYS_BASE
-  if (! ((void*)uaddr < PHYS_BASE)) {
-    return -1;
-  }
-
-  // as suggested in the reference manual, see (3.1.5)
-  int result;
-  asm ("movl $1f, %0; movzbl %1, %0; 1:"
-      : "=&a" (result) : "m" (*uaddr));
-  return result;
-}
-
-static int
-memread_user (void *src, void *dst, size_t bytes)
-{
-  int32_t value;
-  size_t i;
-  for(i=0; i<bytes; i++) {
-    value = get_user(src + i);
-    if(value == -1) // segfault or invalid memory access
-      fail_invalid_access();
-
-    *(char*)(dst + i) = value & 0xff;
-  }
-  return (int)bytes;
-
-}

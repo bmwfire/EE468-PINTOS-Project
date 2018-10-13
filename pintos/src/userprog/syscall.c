@@ -174,16 +174,16 @@ syscall_handler (struct intr_frame *f)
   case SYS_EXEC:
     {
       // Validate the pointer to the first argument on the stack
-      if(!is_valid_ptr(*esp + 1))
+      if(!is_valid_ptr((void*)*(esp + 1))
         sys_exit(-1);
 
       // Validate the buffer that the first argument is pointing to, this is a pointer to the command line args
       // that include the filename and additional arguments for process execute
-      if(!is_valid_ptr((void *)*(*esp + 1)))
+      if(!is_valid_ptr((void *)*(*(esp + 1)))
         sys_exit(-1);
 
       // pointers are valid, call sys_exec and save result to eax for the interrupt frame
-      f->eax = sys_exec((const char *)*(*esp + 1));
+      f->eax = sys_exec((const char *)*(*(esp + 1)));
       break;
     }
 

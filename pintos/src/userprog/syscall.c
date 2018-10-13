@@ -94,14 +94,15 @@ syscall_handler (struct intr_frame *f)
     }
   case SYS_REMOVE:
     {
-      const char* filename;
-      bool ret;
-
-      lock_acquire (&filesys_lock);
-      ret = filesys_remove(filename);
-      lock_release (&filesys_lock);
-
-      f->eax = ret;
+      // TODO
+      // const char* filename;
+      // bool ret;
+      //
+      // lock_acquire (&filesys_lock);
+      // ret = filesys_remove(filename);
+      // lock_release (&filesys_lock);
+      //
+      // f->eax = ret;
       break;
     }
   case SYS_WRITE:

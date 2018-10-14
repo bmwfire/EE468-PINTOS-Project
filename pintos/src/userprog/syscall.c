@@ -72,7 +72,6 @@ syscall_handler (struct intr_frame *f)
   printf("SYSCALL: Entered syscall\n");
 
   // The system call number is in the 32-bit word at the caller's stack pointer.
-
   esp = f->esp;
   printf("SYSCALL: esp is %d\n", *esp);
   if(!is_valid_ptr(esp)){
@@ -204,6 +203,7 @@ void sys_halt(void) {
 }
 
 void sys_exit(int status) {
+  thread_exit();
   printf("%s: exit(%d)\n", thread_current()->name, status);
 
   // The process exits.
@@ -217,7 +217,6 @@ void sys_exit(int status) {
   //   // pcb == NULL probably means that previously
   //   // page allocation has failed in process_execute()
   // }
-  thread_exit();
 }
 
 

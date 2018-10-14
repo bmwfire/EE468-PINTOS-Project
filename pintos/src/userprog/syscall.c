@@ -92,6 +92,10 @@ syscall_handler (struct intr_frame *f)
       is_valid_ptr(f->esp+1);
       break;
     }
+  case SYS_WAIT:
+    {
+      while(1); //TODO
+    }
   case SYS_REMOVE:
     {
       // TODO

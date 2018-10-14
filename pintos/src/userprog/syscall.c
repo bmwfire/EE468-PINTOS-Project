@@ -89,7 +89,7 @@ syscall_handler (struct intr_frame *f)
   case SYS_EXIT: // 1
     {
       is_valid_ptr(esp+1);
-      sys_exit(*(esp+1))
+      sys_exit(*(esp+1));
       break;
     }
   case SYS_WAIT:

@@ -116,8 +116,8 @@ syscall_handler (struct intr_frame *f)
         else{
           if(!is_valid_ptr((const void*)(*(esp+2)))){
             printf("write: esp %x \n", (esp));
-            printf("write: esp + 2 %x \n", (esp + 2));
-            printf("write: *(esp + 2) hex %x \n", *(esp + 2));
+            printf("write: esp + 6 %x \n", (esp + 6));
+            printf("write: *(esp + 6) hex %s \n", (char *)*(esp + 6));
             printf("write: fd = *(esp + 5) %d \n", *(esp + 5));
             printf("WRITE: *(esp + 2) invalid \n");
           }

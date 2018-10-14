@@ -204,8 +204,6 @@ void sys_halt(void) {
 
 void sys_exit(int status) {
   thread_exit();
-  printf("%s: exit(%d)\n", thread_current()->name, status);
-
   // The process exits.
   // wake up the parent process (if it was sleeping) using semaphore,
   // and pass the return code.

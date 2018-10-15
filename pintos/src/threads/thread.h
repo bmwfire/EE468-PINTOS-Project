@@ -89,12 +89,12 @@ struct thread
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
-    int next_fd;                        /* the next available file descriptor in the list of open files for thread */
-    struct list open_files;             /* list of thread's open files */
-
+    struct list open_files;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+
+    int next_fd;
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */

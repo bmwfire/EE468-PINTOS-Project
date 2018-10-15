@@ -541,9 +541,9 @@ setup_stack (void **esp, char *bufptr)
           free(argv);
           free(cmdline_cp);
 
-          printf("SETUPSTACK: *esp = %x\n", *esp);
+          //printf("SETUPSTACK: *esp = %x\n", *esp);
 
-          hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
+          //hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
       }
       else
         palloc_free_page (kpage);

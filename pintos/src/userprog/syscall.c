@@ -69,13 +69,13 @@ static void
 syscall_handler (struct intr_frame *f)
 {
   uint32_t *esp;
-  printf("SYSCALL: Entered syscall\n");
+  //printf("SYSCALL: Entered syscall\n");
 
   // The system call number is in the 32-bit word at the caller's stack pointer.
   esp = f->esp;
-  printf("SYSCALL: esp is %d\n", *esp);
+  //printf("SYSCALL: esp is %d\n", *esp);
   if(!is_valid_ptr(esp)){
-    printf("SYSCALL: esp invalid pointer\n");
+    //printf("SYSCALL: esp invalid pointer\n");
     sys_exit(-1);
   }
   // Dispatch w.r.t system call number
@@ -111,28 +111,28 @@ syscall_handler (struct intr_frame *f)
     }
   case SYS_WRITE:
     {
-      printf("WRITE: starting syswrite with esp = %d\n", *esp);
+      //printf("WRITE: starting syswrite with esp = %d\n", *esp);
       if(is_valid_ptr((const void*)(esp+5)) && is_valid_ptr( (const void*) (esp+6)) && is_valid_ptr((const void*)(esp+7)))
       {
-        printf("WRITE: size = %d\n", *(esp+7));
+        //printf("WRITE: size = %d\n", *(esp+7));
         if(is_valid_ptr((const void*)(*(esp+6))) && is_valid_ptr((const void*)((*(esp+6)+*(esp+7)-1))))
           f->eax = (uint32_t) sys_write((int) *(esp+5), (const void*) *(esp+6), (unsigned) *(esp+7));
         else{
           if(!is_valid_ptr((const void*)(*(esp+6)))){
-            printf("write: esp %x \n", (esp));
-            printf("write: esp + 6 %x \n", (esp + 6));
-            printf("write: *(esp + 6) hex %s \n", (char *)*(esp + 6));
-            printf("write: fd = *(esp + 5) %d \n", *(esp + 5));
-            printf("WRITE: *(esp + 6) invalid \n");
+            //printf("write: esp %x \n", (esp));
+            //printf("write: esp + 6 %x \n", (esp + 6));
+            //printf("write: *(esp + 6) hex %s \n", (char *)*(esp + 6));
+            //printf("write: fd = *(esp + 5) %d \n", *(esp + 5));
+            //printf("WRITE: *(esp + 6) invalid \n");
           }
           if(!is_valid_ptr((const void*)((*(esp+6)+*(esp+7)-1)))){
-            printf("WRITE: (*(esp+5)+*(esp+6)-1) invalid \n");
+            //printf("WRITE: (*(esp+5)+*(esp+6)-1) invalid \n");
           }
-          printf("WRITE: Pointer found as invalid 2\n");
+          //printf("WRITE: Pointer found as invalid 2\n");
           sys_exit(-1);
         }
       }else{
-        printf("WRITE: Pointer found as invalid 1\n");
+        //printf("WRITE: Pointer found as invalid 1\n");
         sys_exit(-1);
       }
       break;
@@ -233,15 +233,15 @@ bool is_valid_ptr(const void *user_ptr)
     return (pagedir_get_page(curr->pagedir, user_ptr)) != NULL;
   }
   if(user_ptr == NULL){
-    printf("Pointer is NULL\n");
+    //printf("Pointer is NULL\n");
   }else{
-    printf("Pointer is not user address space\n");
+    //printf("Pointer is not user address space\n");
   }
   return false;
 }
 
 int sys_write(int fd, const void *buffer, unsigned size) {
-  printf("WRITE: fd = %d, size = %d\n", fd, size);
+  //printf("WRITE: fd = %d, size = %d\n", fd, size);
   struct file_descriptor *fd_struct;
   int bytes_written = 0;
 

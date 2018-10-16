@@ -33,7 +33,6 @@ int sys_exec (const char *cmdline);
 struct lock filesys_lock;
 
 bool is_valid_ptr(const void *user_ptr);
-//void sys_halt();
 
 //enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
 struct file_descriptor * retrieve_file(int fd);
@@ -87,7 +86,8 @@ syscall_handler (struct intr_frame *f)
     }
   case SYS_EXIT: // 1
     {
-      is_valid_ptr(esp+1);
+      printf("SYSCALL: SYS_EXIT \n");
+      //is_valid_ptr(esp+1);
       sys_exit(*(esp+1));
       break;
     }

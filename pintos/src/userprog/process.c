@@ -87,13 +87,13 @@ start_process (void *cmdline_)
   success = load (cmd_line, &if_.eip, &if_.esp);
 
   // check whether load failed or not
-  if(!sucess)
+  if(!success)
     load_status = -1;
   else
     load_status = 1;
 
   parent_thread = thread_get_by_id(thread_current()->parent_tid);
-  if (parent != NULL)
+  if (parent_thread != NULL)
    {
      lock_acquire(&parent_thread->child_lock);
      parent_thread->child_load = load_status;

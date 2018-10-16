@@ -36,7 +36,6 @@ bool is_valid_ptr(const void *user_ptr);
 //void sys_halt();
 
 //enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
-// static struct file_desc* find_file_desc(struct thread *, int fd, enum fd_search_filter flag);
 struct file_descriptor * retrieve_file(int fd);
 
 struct file_descriptor{
@@ -208,17 +207,7 @@ void sys_halt(void) {
 
 void sys_exit(int status) {
   thread_exit();
-  // The process exits.
-  // wake up the parent process (if it was sleeping) using semaphore,
-  // and pass the return code.
-  // struct process_control_block *pcb = thread_current()->pcb;
-  // if(pcb != NULL) {
-  //   pcb->exitcode = status;
-  // }
-  // else {
-  //   // pcb == NULL probably means that previously
-  //   // page allocation has failed in process_execute()
-  // }
+  // TODO
 }
 
 

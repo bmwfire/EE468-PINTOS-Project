@@ -67,11 +67,11 @@ static void
 syscall_handler (struct intr_frame *f)
 {
   uint32_t *esp;
-  printf("SYSCALL: Entered syscall\n");
+  //printf("SYSCALL: Entered syscall\n");
 
   // The system call number is in the 32-bit word at the caller's stack pointer.
   esp = f->esp;
-  printf("SYSCALL: esp is %d\n", *esp);
+  //printf("SYSCALL: esp is %d\n", *esp);
   if(!is_valid_ptr(esp)){
     //printf("SYSCALL: esp invalid pointer\n");
     sys_exit(-1);
@@ -79,14 +79,15 @@ syscall_handler (struct intr_frame *f)
   // Dispatch w.r.t system call number
   // SYS_*** constants are defined in syscall-nr.h
   switch (*esp) {
-  case SYS_HALT: // 0
+  case SYS_HALT:
     {
+      //printf("SYSCALL: SYS_HALT \n");
       sys_halt();
       break;
     }
-  case SYS_EXIT: // 1
+  case SYS_EXIT:
     {
-      printf("SYSCALL: SYS_EXIT \n");
+      //printf("SYSCALL: SYS_EXIT \n");
       //is_valid_ptr(esp+1);
       sys_exit(*(esp+1));
       break;
@@ -150,13 +151,13 @@ int sys_exec (const char *cmdline){
   char * file_name;
   struct file * f;
   int thread_id;
-  printf("SYSCALL: sys_exec: cmdline: %s \n", cmdline);
+  //printf("SYSCALL: sys_exec: cmdline: %s \n", cmdline);
   // copy command line to parse and obtain filename to open
   cmdline_cp = malloc(strlen(cmdline)+1);
   strlcpy(cmdline_cp, cmdline, strlen(cmdline)+1);
   file_name = strtok_r(cmdline_cp, " ", &ptr);
 
-  printf("SYSCALL: sys_exec: file_name: %s \n", file_name);
+  //printf("SYSCALL: sys_exec: file_name: %s \n", file_name);
 
   // it is not safe to call into the file system code provided in "filesys" directory from multiple threads at once
   // your system call implementation must treat the file system code as a critical section
@@ -170,7 +171,7 @@ int sys_exec (const char *cmdline){
   // f will be null if file not found in file system
   if (f == NULL){
     // nothing to do here exec fails, release lock and return -1
-    printf("SYSCALL: sys_exec: filesys_open failed\n");
+    //printf("SYSCALL: sys_exec: filesys_open failed\n");
     lock_release(&filesys_lock);
     return -1;
   } else {
@@ -182,14 +183,14 @@ int sys_exec (const char *cmdline){
     thread_current()->child_load = 0;
     thread_id = process_execute(cmdline);
     lock_acquire(&thread_current()->child_lock);
-    printf("SYSCALL: sys_exec: waiting until child_load != 0\n");
+    //printf("SYSCALL: sys_exec: waiting until child_load != 0\n");
     while(thread_current()->child_load == 0)
       cond_wait(&thread_current()->child_condition, &thread_current()->child_lock);
-    printf("SYSCALL: sys_exec: child_load != 0\n");
+    //printf("SYSCALL: sys_exec: child_load != 0\n");
     if(thread_current()->child_load == -1) // load failed no process id to return
      {
        thread_id = -1;
-       printf("SYSCALL: sys_exec: child_load failed\n");
+       //printf("SYSCALL: sys_exec: child_load failed\n");
      }
     lock_release(&thread_current()->child_lock);
     return thread_id;

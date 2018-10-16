@@ -36,7 +36,7 @@ process_execute (const char *cmdline)
   struct child_status *child;
   tid_t tid;
 
-  printf("process.c: process_execute: cmdline= %s\n", cmdline);
+  //printf("process.c: process_execute: cmdline= %s\n", cmdline);
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -51,7 +51,7 @@ process_execute (const char *cmdline)
   file_name = strtok_r(cmdline_cp, " ", &file_name_ptr);
 
   /* Create a new thread to execute FILE_NAME. */
-  printf("process.c: process_execute: creating thread:%s\n",file_name);
+  //printf("process.c: process_execute: creating thread:%s\n",file_name);
   tid = thread_create (file_name, PRI_DEFAULT, start_process, cmd_copy);
 
   /* free allocated memory pointed to by file_name */
@@ -59,7 +59,7 @@ process_execute (const char *cmdline)
 
   if (tid == TID_ERROR)
     {
-      printf("process.c: process_execute: thread_create failed: tid == TID_ERROR\n");
+      //printf("process.c: process_execute: thread_create failed: tid == TID_ERROR\n");
       palloc_free_page (cmd_copy);
     }
   else
@@ -71,7 +71,7 @@ process_execute (const char *cmdline)
      // add new child thread to parents list of children
      list_push_back(&thread_current()->children, &child->elem_child_status);
    }
-  printf("process.c: process_execute: thread_create and child added to parent list success\n");
+  //printf("process.c: process_execute: thread_create and child added to parent list success\n");
   return tid;
 }
 
@@ -301,7 +301,7 @@ load (const char *cmdline, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024)
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      //printf ("load: %s: error loading executable\n", file_name);
       goto done;
     }
 
@@ -565,9 +565,9 @@ setup_stack (void **esp, char *bufptr)
           free(argv);
           free(cmdline_cp);
 
-          printf("process.c: setup_stack: *esp = %x\n", *esp);
+          //printf("process.c: setup_stack: *esp = %x\n", *esp);
 
-          hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
+          //hex_dump((uintptr_t)*esp, *esp , PHYS_BASE - *esp, true);
       }
       else
         palloc_free_page (kpage);

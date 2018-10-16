@@ -30,7 +30,7 @@ struct child_status {
   bool waiting;
   int child_exit_status;
   struct list_elem elem_child_status;
-}
+};
 
 /* A kernel thread or user process.
 

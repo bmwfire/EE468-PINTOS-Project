@@ -29,11 +29,7 @@ static void syscall_handler (struct intr_frame *);
 void sys_exit (int);
 void sys_halt(void);
 int sys_exec (const char *cmdline);
-
-struct lock filesys_lock;
-
 bool is_valid_ptr(const void *user_ptr);
-//void sys_halt();
 
 //enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
 // static struct file_desc* find_file_desc(struct thread *, int fd, enum fd_search_filter flag);
@@ -149,21 +145,21 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       // pointers are valid, call sys_exec and save result to eax for the interrupt frame
-      f->eax = (uint32_t)sys_exec((const char *)*(stack + 1));
+      f->eax = (uint32_t)sys_exec((const char *)*(esp + 1));
       break;
     }
   case SYS_OPEN:
     {
       // syscall1: Validate the pointer to the first and only argument on the stack
-      if(!is_valid_ptr((void*)(stack + 1)))
+      if(!is_valid_ptr((void*)(esp + 1)))
         sys_exit(-1);
 
       // Validate the dereferenced pointer to the buffer holding the filename
-      if(!is_valid_buffer((char *)*(stack + 1)))
+      if(!is_valid_ptr((char *)*(esp + 1)))
         sys_exit(-1);
 
       // set return value of sys call to the file descriptor
-      f->eax = (uint32_t)sys_open((char *)*(stack + 1));
+      f->eax = (uint32_t)sys_open((char *)*(esp + 1));
     }
 
   /* unhandled case */
@@ -187,7 +183,7 @@ int sys_open(char * file)
   // open the file
   struct file * new_file_struct = filesys_open(file);
 
-  // all done with file sys for now
+  // all done with file sys
   lock_release(&filesys_lock);
 
   // file will be null if file not found in file system
@@ -200,12 +196,12 @@ int sys_open(char * file)
   // process or different processes each open returns a new file descriptor. Different file descriptors for a single
   // file are closed independently in seperate calls to close and they do not share a file position. We should make a
   // list of files so if a single file is opened more than once we can close it without conflicts.
-  struct thread_file * new_thread_file = malloc(sizeof(struct thread_file));
+  struct file_descriptor * new_thread_file = malloc(sizeof(struct file_descriptor));
   new_thread_file->file_struct = new_file_struct;
-  new_thread_file->fd = thread_current()->next_fd;
+  new_thread_file->fd_num = thread_current()->next_fd;
   thread_current()->next_fd++;
-  list_push_back(&thread_current()->open_files, &new_thread_file->list_elem_struct);
-  return new_thread_file->fd;
+  list_push_back(&thread_current()->open_files, &new_thread_file->list_elem);
+  return new_thread_file->fd_num;
 }
 
 int sys_exec (const char *cmdline){
@@ -262,7 +258,6 @@ void sys_exit(int status) {
   //   // page allocation has failed in process_execute()
   // }
 }
-
 
 /* The kernel must be very careful about doing so, because the user can pass
  * a null pointer, a pointer to unmapped virtual memory, or a pointer to

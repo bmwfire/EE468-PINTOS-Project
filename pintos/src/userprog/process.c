@@ -33,6 +33,7 @@ process_execute (const char *cmdline)
   char *file_name;
   char *cmdline_cp;
   char *file_name_ptr;
+  struct child_status *child;
   tid_t tid;
 
   /* Make a copy of FILE_NAME.
@@ -50,10 +51,20 @@ process_execute (const char *cmdline)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, cmd_copy);
 
+  /* free allocated memory pointed to by file_name */
   free(file_name);
 
   if (tid == TID_ERROR)
     palloc_free_page (cmd_copy);
+  else
+   {
+     child = calloc(1, sizeof(struct child_status));
+     child->child_tid = tid;
+     child->exited = false;
+     child->waiting = false;
+     // add new child thread to parents list of children
+     list_push_back(&thread_current()->children, &child->elem_child_status);
+   }
   return tid;
 }
 
@@ -63,11 +74,10 @@ static void
 start_process (void *cmdline_)
 {
   char *cmd_line = cmdline_;
-  //char *cmdline_cp;
-  //char *file_name;
-  //char *file_name_ptr;
+  int load_status;
   struct intr_frame if_;
   bool success;
+  struct thread *parent_thread;
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -76,16 +86,24 @@ start_process (void *cmdline_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (cmd_line, &if_.eip, &if_.esp);
 
-  /* obtain executable file name */
-  //cmdline_cp = (char *) malloc(strlen(cmd_line) + 1);
-  //strlcpy(cmdline_cp, cmd_line, strlen(cmd_line) + 1);
-  //file_name = strtok_r(cmdline_cp, " ", &file_name_ptr);
+  // check whether load failed or not
+  if(!sucess)
+    load_status = -1;
+  else
+    load_status = 1;
 
-  //printf("start_process: file_name: %s\n", file_name);
+  parent_thread = thread_get_by_id(thread_current()->parent_tid);
+  if (parent != NULL)
+   {
+     lock_acquire(&parent_thread->child_lock);
+     parent_thread->child_load = load_status;
+     cond_signal(&parent_thread->child_condition, &parent_thread->child_lock);
+     lock_release(&parent_thread->child_lock);
+   }
+
+  palloc_free_page (cmdline_);
 
   /* If load failed, quit. */
-  palloc_free_page (cmdline_);
-  //free(cmdline_cp);
   if (!success)
     thread_exit ();
 
@@ -350,7 +368,6 @@ load (const char *cmdline, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
   free(cmdline_cp);
   free(cmdline_cp_2);
   return success;

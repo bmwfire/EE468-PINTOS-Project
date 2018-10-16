@@ -92,10 +92,6 @@ syscall_handler (struct intr_frame *f)
       sys_exit(*(esp+1));
       break;
     }
-  case SYS_WAIT:
-    {
-      while(1); //TODO
-    }
   case SYS_REMOVE:
     {
       // TODO
@@ -193,13 +189,14 @@ int sys_exec (const char *cmdline){
     file_close(f);
     lock_release(&filesys_lock);
 
-    // wait for child process to load so we can tell parent the child's status
-    lock_acquire()
+    // wait for child process to load successfully, othrewise return -1
     thread_current()->child_load = 0;
     thread_id = process_execute(cmdline);
     lock_acquire(&thread_current()->child_lock);
     while(thread_current()->child_load == 0)
       cond_wait(&thread_current()->child_condition, &thread_current()->child_lock);
+    if(thread_current()->child_load == -1) // load failed no process id to return
+      thread_id = -1;
     lock_release(&thread_current()->child_lock);
     return thread_id;
   }
@@ -288,33 +285,3 @@ struct file_descriptor * retrieve_file(int fd){
 
   return NULL;
 }
-
-
-// static struct file_desc*
-// find_file_desc(struct thread *t, int fd, enum fd_search_filter flag)
-// {
-//   ASSERT (t != NULL);
-//
-//   if (fd < 3) {
-//     return NULL;
-//   }
-//
-//   struct list_elem *e;
-//
-//   // if (! list_empty(&t->file_descriptors)) {
-//   //   for(e = list_begin(&t->file_descriptors);
-//   //       e != list_end(&t->file_descriptors); e = list_next(e))
-//   //   {
-//   //     struct file_desc *desc = list_entry(e, struct file_desc, elem);
-//   //     if(desc->id == fd) {
-//   //       // found. filter by flag to distinguish file and directorys
-//   //       if (desc->dir != NULL && (flag & FD_DIRECTORY) )
-//   //         return desc;
-//   //       else if (desc->dir == NULL && (flag & FD_FILE) )
-//   //         return desc;
-//   //     }
-//   //   }
-//   // }
-//
-//   return NULL; // not found
-// }

@@ -184,6 +184,7 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+  t->parent_tid = thread_current()->tid;
 
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack'
@@ -472,6 +473,9 @@ init_thread (struct thread *t, const char *name, int priority)
   //initialize file list
   list_init (&t->open_files);
   t->next_fd=2;
+  t->child_load = 0;
+  lock_init(&t->child_lock);
+  cond_init(&t->cond_child);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

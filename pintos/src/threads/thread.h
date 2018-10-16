@@ -90,11 +90,15 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
     struct list open_files;
+    int next_fd;
+    int child_load;
+    struct lock child_lock;
+    struct condition child_condition;
+    tid_t parent_tid;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-    int next_fd;
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */

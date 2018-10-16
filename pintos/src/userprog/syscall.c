@@ -167,7 +167,7 @@ int sys_exec (const char *cmdline){
   char * ptr;
   char * file_name;
   struct file * f;
-  int return_value;
+  int thread_id;
   // copy command line to parse and obtain filename to open
   cmdline_cp = malloc(strlen(cmdline)+1);
   strlcpy(cmdline_cp, cmdline, strlen(cmdline)+1);
@@ -190,11 +190,18 @@ int sys_exec (const char *cmdline){
     return -1;
   } else {
     // file exists, we can close file and call our implemented process_execute() to run the executable
-    // note that process_execute accesses filesystem so hold onto lock until it is complete
     file_close(f);
-    return_value = process_execute(cmdline);
     lock_release(&filesys_lock);
-    return return_value;
+
+    // wait for child process to load so we can tell parent the child's status
+    lock_acquire()
+    thread_current()->child_load = 0;
+    thread_id = process_execute(cmdline);
+    lock_acquire(&thread_current()->child_lock);
+    while(thread_current()->child_load == 0)
+      cond_wait(&thread_current()->child_condition, &thread_current()->child_lock);
+    lock_release(&thread_current()->child_lock);
+    return thread_id;
   }
 }
 

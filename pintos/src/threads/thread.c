@@ -475,10 +475,10 @@ init_thread (struct thread *t, const char *name, int priority)
   t->next_fd=2;
 
   // initialize child infrastructure
-  list_init(t->children)
+  list_init(&t->children);
   t->child_load = 0;
   lock_init(&t->child_lock);
-  cond_init(&t->cond_child);
+  cond_init(&t->child_condition);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

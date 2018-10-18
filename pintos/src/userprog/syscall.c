@@ -92,6 +92,40 @@ syscall_handler (struct intr_frame *f)
       sys_exit(*(esp+1));
       break;
     }
+  case SYS_WAIT:
+    {
+      while(1); //TODO
+    }
+    case SYS_CREATE:
+    {
+      is_valid_ptr(esp+5);
+      is_valid_ptr(*(esp+4));
+      lock_acquire();
+      f->eax = filesys_create(*(esp+4), *(esp+5))
+      lock_release();
+      break;
+    }
+  case SYS_REMOVE:
+    {
+      // TODO
+      // const char* filename;
+      // bool ret;
+      //
+      // lock_acquire (&filesys_lock);
+      // ret = filesys_remove(filename);
+      // lock_release (&filesys_lock);
+      //
+      // f->eax = ret;
+      is_valid_ptr(esp+1);
+      is_valid_ptr(*(esp+1));
+      lock_acquire();
+      if(filesys_remove(*esp+1)) == NULL)
+        f->eax = false;
+        else
+        f->eax = true;
+        lock_release();
+      break;
+    }
   case SYS_WRITE:
     {
       //printf("WRITE: starting syswrite with esp = %d\n", *esp);

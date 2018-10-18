@@ -30,6 +30,7 @@ void sys_exit (int);
 void sys_halt(void);
 int sys_exec (const char *cmdline);
 int sys_open(char * file);
+int sys_filesize(int fd_num);
 
 struct lock filesys_lock;
 
@@ -185,6 +186,14 @@ syscall_handler (struct intr_frame *f)
       f->eax = (uint32_t)sys_open((char *)*(esp + 1));
       break;
     }
+  case SYS_FILESIZE: //syscall 7: 1 arg. arg[1] is the fd number
+    {
+      if(!is_valid_ptr((const void *)(esp + 1)))
+        sys_exit(-1);
+
+      f->eax = sys_filesize((int)(*(esp+1)));
+      break;
+    }
 
   /* unhandled case */
   default:
@@ -194,6 +203,22 @@ syscall_handler (struct intr_frame *f)
     sys_exit(-1);
     break;
   }
+}
+
+int sys_filesize(int fd_num)
+{
+  struct file_descriptor * file_desc;
+  int returnval = -1;
+
+  // using the file filesystem => acquire lock
+  lock_acquire(&filesys_lock);
+
+  file_desc = retrieve_file(fd_num);
+
+  if (file_desc != NULL)
+    returnval = file_length(file_desc->file_struct);
+  lock_release(&filesys_lock);
+  return returnval;
 }
 
 /* Opens the file called file. Returns a nonnegative integer handle called a "file descriptor" or -1 if the file could

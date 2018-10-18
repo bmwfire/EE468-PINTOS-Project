@@ -69,7 +69,7 @@ syscall_handler (struct intr_frame *f)
 
   // The system call number is in the 32-bit word at the caller's stack pointer.
   esp = f->esp;
-  printf("SYSCALL: esp is %d\n", *esp);
+  //printf("SYSCALL: esp is %d\n", *esp);
   if(!is_valid_ptr(esp)){
     //printf("SYSCALL: esp invalid pointer\n");
     sys_exit(-1);
@@ -105,7 +105,7 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void*)*(esp+4)))
         sys_exit(-1);
 
-      printf("SYSCALL: SYS_CREATE: filename: %s\n", *(esp+4));
+      //printf("SYSCALL: SYS_CREATE: filename: %s\n", *(esp+4));
 
       lock_acquire(&filesys_lock);
       f->eax = filesys_create((const char*)*(esp+4), (off_t)*(esp+5));
@@ -120,7 +120,7 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void*)*(esp+1)))
         sys_exit(-1);
 
-      printf("SYSCALL: SYS_REMOVE: filename: %s\n", *(esp+1));
+      //printf("SYSCALL: SYS_REMOVE: filename: %s\n", *(esp+1));
 
       lock_acquire(&filesys_lock);
       f->eax = filesys_remove((const char *)*(esp+1));
@@ -180,7 +180,7 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void*)*(esp + 1)))
         sys_exit(-1);
 
-      printf("SYSCALL: SYS_OPEN: filename: %s\n", *(esp+1));
+      //printf("SYSCALL: SYS_OPEN: filename: %s\n", *(esp+1));
 
       // set return value of sys call to the file descriptor
       f->eax = (uint32_t)sys_open((char *)*(esp + 1));
@@ -191,7 +191,7 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void *)(esp + 1)))
         sys_exit(-1);
 
-      printf("SYSCALL: SYS_FILESIZE: fd_num: %d\n", *(esp+1));
+      //printf("SYSCALL: SYS_FILESIZE: fd_num: %d\n", *(esp+1));
 
       f->eax = sys_filesize((int)(*(esp+1)));
       break;
@@ -212,7 +212,7 @@ int sys_filesize(int fd_num)
   struct file_descriptor * file_desc;
   int returnval = -1;
 
-  printf("sys_filesize: retrieving file descriptor: %d\n", fd_num);
+  //printf("sys_filesize: retrieving file descriptor: %d\n", fd_num);
 
   // using the file filesystem => acquire lock
   lock_acquire(&filesys_lock);
@@ -221,7 +221,7 @@ int sys_filesize(int fd_num)
 
   if (file_desc != NULL)
   {
-    printf("sys_filesize: retrieved file descriptor: %d\n", file_desc->fd_num);
+    //printf("sys_filesize: retrieved file descriptor: %d\n", file_desc->fd_num);
     returnval = file_length(file_desc->file_struct);
   }
   lock_release(&filesys_lock);
@@ -242,7 +242,7 @@ int sys_open(char * file_name)
   // file will be null if file not found in file system
   if (new_file_struct==NULL){
     // nothing to do here open fails, return -1
-    printf("sys_open: file not found in filesystem \n");
+    //printf("sys_open: file not found in filesystem \n");
     lock_release(&filesys_lock);
     return -1;
   }
@@ -256,7 +256,7 @@ int sys_open(char * file_name)
   new_thread_file->fd_num = thread_current()->next_fd;
   thread_current()->next_fd++;
   list_push_back(&thread_current()->open_files, &new_thread_file->elem);
-  printf("sys_open: file found in filesystem. new file_descriptor number: %d \n", new_thread_file->fd_num);
+  //printf("sys_open: file found in filesystem. new file_descriptor number: %d \n", new_thread_file->fd_num);
   lock_release(&filesys_lock);
   return new_thread_file->fd_num;
 }

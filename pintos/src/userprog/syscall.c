@@ -105,7 +105,7 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       lock_acquire(&filesys_lock);
-      f->eax = filesys_create(*(esp+4), *(esp+5));
+      f->eax = filesys_create((const char*)*(esp+4), (off_t)*(esp+5));
       lock_release(&filesys_lock);
       break;
     }
@@ -118,7 +118,7 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       lock_acquire(&filesys_lock);
-      f->eax = filesys_remove(*(esp+1));
+      f->eax = filesys_remove((const char *)*(esp+1));
       lock_release(&filesys_lock);
       break;
     }

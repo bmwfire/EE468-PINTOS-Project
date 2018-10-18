@@ -104,6 +104,8 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void*)*(esp+4)))
         sys_exit(-1);
 
+      printf("SYSCALL: SYS_CREATE: filename: %s\n", *(esp+4));
+
       lock_acquire(&filesys_lock);
       f->eax = filesys_create((const char*)*(esp+4), (off_t)*(esp+5));
       lock_release(&filesys_lock);
@@ -111,11 +113,13 @@ syscall_handler (struct intr_frame *f)
     }
   case SYS_REMOVE:
     {
-      if(!is_valid_ptr((const void*)esp+4))
+      if(!is_valid_ptr((const void*)esp+1))
         sys_exit(-1);
 
-      if(!is_valid_ptr((const void*)*(esp+4)))
+      if(!is_valid_ptr((const void*)*(esp+1)))
         sys_exit(-1);
+
+      printf("SYSCALL: SYS_REMOVE: filename: %s\n", *(esp+1));
 
       lock_acquire(&filesys_lock);
       f->eax = filesys_remove((const char *)*(esp+1));
@@ -174,6 +178,8 @@ syscall_handler (struct intr_frame *f)
       // Validate the dereferenced pointer to the buffer holding the filename
       if(!is_valid_ptr((const void*)*(esp + 1)))
         sys_exit(-1);
+
+      printf("SYSCALL: SYS_OPEN: filename: %s\n", *(esp+1));
 
       // set return value of sys call to the file descriptor
       f->eax = (uint32_t)sys_open((char *)*(esp + 1));

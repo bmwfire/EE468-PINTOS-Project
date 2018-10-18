@@ -33,10 +33,7 @@ int sys_exec (const char *cmdline);
 struct lock filesys_lock;
 
 bool is_valid_ptr(const void *user_ptr);
-//void sys_halt();
 
-//enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
-// static struct file_desc* find_file_desc(struct thread *, int fd, enum fd_search_filter flag);
 struct file_descriptor * retrieve_file(int fd);
 
 struct file_descriptor{
@@ -81,14 +78,16 @@ syscall_handler (struct intr_frame *f)
   // Dispatch w.r.t system call number
   // SYS_*** constants are defined in syscall-nr.h
   switch (*esp) {
-  case SYS_HALT: // 0
+  case SYS_HALT:
     {
+      //printf("SYSCALL: SYS_HALT \n");
       sys_halt();
       break;
     }
-  case SYS_EXIT: // 1
+  case SYS_EXIT:
     {
-      is_valid_ptr(esp+1);
+      //printf("SYSCALL: SYS_EXIT \n");
+      //is_valid_ptr(esp+1);
       sys_exit(*(esp+1));
       break;
     }
@@ -184,12 +183,14 @@ int sys_exec (const char *cmdline){
   char * ptr;
   char * file_name;
   struct file * f;
-  int return_value;
+  int thread_id;
+  //printf("SYSCALL: sys_exec: cmdline: %s \n", cmdline);
   // copy command line to parse and obtain filename to open
   cmdline_cp = malloc(strlen(cmdline)+1);
   strlcpy(cmdline_cp, cmdline, strlen(cmdline)+1);
   file_name = strtok_r(cmdline_cp, " ", &ptr);
 
+  //printf("SYSCALL: sys_exec: file_name: %s \n", file_name);
 
   // it is not safe to call into the file system code provided in "filesys" directory from multiple threads at once
   // your system call implementation must treat the file system code as a critical section
@@ -201,17 +202,31 @@ int sys_exec (const char *cmdline){
   f = filesys_open(file_name);
 
   // f will be null if file not found in file system
-  if (f==NULL){
+  if (f == NULL){
     // nothing to do here exec fails, release lock and return -1
+    //printf("SYSCALL: sys_exec: filesys_open failed\n");
     lock_release(&filesys_lock);
     return -1;
   } else {
     // file exists, we can close file and call our implemented process_execute() to run the executable
-    // note that process_execute accesses filesystem so hold onto lock until it is complete
     file_close(f);
-    return_value = process_execute(cmdline);
     lock_release(&filesys_lock);
-    return return_value;
+
+    // wait for child process to load successfully, otherwise return -1
+    thread_current()->child_load = 0;
+    thread_id = process_execute(cmdline);
+    lock_acquire(&thread_current()->child_lock);
+    //printf("SYSCALL: sys_exec: waiting until child_load != 0\n");
+    while(thread_current()->child_load == 0)
+      cond_wait(&thread_current()->child_condition, &thread_current()->child_lock);
+    //printf("SYSCALL: sys_exec: child_load != 0\n");
+    if(thread_current()->child_load == -1) // load failed no process id to return
+     {
+       thread_id = -1;
+       //printf("SYSCALL: sys_exec: child_load failed\n");
+     }
+    lock_release(&thread_current()->child_lock);
+    return thread_id;
   }
 }
 
@@ -221,17 +236,7 @@ void sys_halt(void) {
 
 void sys_exit(int status) {
   thread_exit();
-  // The process exits.
-  // wake up the parent process (if it was sleeping) using semaphore,
-  // and pass the return code.
-  // struct process_control_block *pcb = thread_current()->pcb;
-  // if(pcb != NULL) {
-  //   pcb->exitcode = status;
-  // }
-  // else {
-  //   // pcb == NULL probably means that previously
-  //   // page allocation has failed in process_execute()
-  // }
+  // TODO
 }
 
 
@@ -298,33 +303,3 @@ struct file_descriptor * retrieve_file(int fd){
 
   return NULL;
 }
-
-
-// static struct file_desc*
-// find_file_desc(struct thread *t, int fd, enum fd_search_filter flag)
-// {
-//   ASSERT (t != NULL);
-//
-//   if (fd < 3) {
-//     return NULL;
-//   }
-//
-//   struct list_elem *e;
-//
-//   // if (! list_empty(&t->file_descriptors)) {
-//   //   for(e = list_begin(&t->file_descriptors);
-//   //       e != list_end(&t->file_descriptors); e = list_next(e))
-//   //   {
-//   //     struct file_desc *desc = list_entry(e, struct file_desc, elem);
-//   //     if(desc->id == fd) {
-//   //       // found. filter by flag to distinguish file and directorys
-//   //       if (desc->dir != NULL && (flag & FD_DIRECTORY) )
-//   //         return desc;
-//   //       else if (desc->dir == NULL && (flag & FD_FILE) )
-//   //         return desc;
-//   //     }
-//   //   }
-//   // }
-//
-//   return NULL; // not found
-// }

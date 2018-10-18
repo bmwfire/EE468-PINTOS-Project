@@ -216,7 +216,7 @@ int sys_open(char * file)
   new_thread_file->file_struct = new_file_struct;
   new_thread_file->fd_num = thread_current()->next_fd;
   thread_current()->next_fd++;
-  list_push_back(&thread_current()->open_files, &new_thread_file->list_elem);
+  list_push_back(&thread_current()->open_files, &new_thread_file->elem);
   return new_thread_file->fd_num;
 }
 

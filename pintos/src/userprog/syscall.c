@@ -30,8 +30,6 @@ void sys_exit (int);
 void sys_halt(void);
 int sys_exec (const char *cmdline);
 
-struct lock filesys_lock;
-
 bool is_valid_ptr(const void *user_ptr);
 
 //enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };

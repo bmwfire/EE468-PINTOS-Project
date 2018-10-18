@@ -32,6 +32,8 @@ int sys_exec (const char *cmdline);
 
 bool is_valid_ptr(const void *user_ptr);
 
+struct lock filesys_lock;
+
 struct file_descriptor * retrieve_file(int fd);
 
 struct file_descriptor{

@@ -110,7 +110,7 @@ syscall_handler (struct intr_frame *f)
     }
   case SYS_REMOVE:
     {
-      if(!is_valid_ptr(esp+4)
+      if(!is_valid_ptr(esp+4))
         sys_exit(-1);
 
       if(!is_valid_ptr(*(esp+4)))

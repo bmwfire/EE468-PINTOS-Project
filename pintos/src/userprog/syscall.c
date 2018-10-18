@@ -85,7 +85,7 @@ syscall_handler (struct intr_frame *f)
     {
       //printf("SYSCALL: SYS_EXIT \n");
       //is_valid_ptr(esp+1);
-      sys_exit(esp+1);
+      sys_exit(*(esp+1));
       break;
     }
   case SYS_WAIT:
@@ -97,14 +97,14 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr(esp+5))
         sys_exit(-1);
 
-      if(!is_valid_ptr(esp+4)
+      if(!is_valid_ptr(esp+4))
         sys_exit(-1);
 
       if(!is_valid_ptr(*(esp+4)))
         sys_exit(-1);
 
       lock_acquire(&filesys_lock);
-      f->eax = filesys_create(*(esp+4), *(esp+5))
+      f->eax = filesys_create(*(esp+4), *(esp+5));
       lock_release(&filesys_lock);
       break;
     }

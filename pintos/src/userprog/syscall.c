@@ -183,6 +183,7 @@ syscall_handler (struct intr_frame *f)
 
       // set return value of sys call to the file descriptor
       f->eax = (uint32_t)sys_open((char *)*(esp + 1));
+      break;
     }
 
   /* unhandled case */

@@ -191,7 +191,7 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void *)(esp + 1)))
         sys_exit(-1);
 
-      printf("SYSCALL: SYS_FILESIZE: filename: %s\n", *(esp+1));
+      printf("SYSCALL: SYS_FILESIZE: fd_num: %d\n", *(esp+1));
 
       f->eax = sys_filesize((int)(*(esp+1)));
       break;

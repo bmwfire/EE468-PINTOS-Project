@@ -231,21 +231,19 @@ int sys_filesize(int fd_num)
 /* Opens the file called file. Returns a nonnegative integer handle called a "file descriptor" or -1 if the file could
  * not be opened. The file descriptor will be the integer location of the file in the current thread's list of files
  * */
-int sys_open(char * file)
+int sys_open(char * file_name)
 {
   // obtain lock for filesystem since we are about to open the file
   lock_acquire(&filesys_lock);
 
   // open the file
-  struct file * new_file_struct = filesys_open(file);
-
-  // all done with file sys
-  lock_release(&filesys_lock);
+  struct file * new_file_struct = filesys_open(file_name);
 
   // file will be null if file not found in file system
-  if (file==NULL){
+  if (new_file_struct==NULL){
     // nothing to do here open fails, return -1
     printf("sys_open: file not found in filesystem \n");
+    lock_release(&filesys_lock);
     return -1;
   }
   // else add file to current threads list of open files
@@ -259,6 +257,7 @@ int sys_open(char * file)
   thread_current()->next_fd++;
   list_push_back(&thread_current()->open_files, &new_thread_file->elem);
   printf("sys_open: file found in filesystem. new file_descriptor number: %d \n", new_thread_file->fd_num);
+  lock_release(&filesys_lock);
   return new_thread_file->fd_num;
 }
 

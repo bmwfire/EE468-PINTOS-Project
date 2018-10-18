@@ -68,7 +68,7 @@ syscall_handler (struct intr_frame *f)
 
   // The system call number is in the 32-bit word at the caller's stack pointer.
   esp = f->esp;
-  //printf("SYSCALL: esp is %d\n", *esp);
+  printf("SYSCALL: esp is %d\n", *esp);
   if(!is_valid_ptr(esp)){
     //printf("SYSCALL: esp invalid pointer\n");
     sys_exit(-1);

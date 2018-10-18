@@ -469,7 +469,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 
-  //initialize file list
+  // initialize file list
   list_init (&t->open_files);
   t->next_fd=2;
 }

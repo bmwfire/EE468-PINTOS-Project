@@ -29,13 +29,9 @@ static void syscall_handler (struct intr_frame *);
 void sys_exit (int);
 void sys_halt(void);
 int sys_exec (const char *cmdline);
-
-struct lock filesys_lock;
-
 bool is_valid_ptr(const void *user_ptr);
-//void sys_halt();
 
-enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
+//enum fd_search_filter { FD_FILE = 1, FD_DIRECTORY = 2 };
 // static struct file_desc* find_file_desc(struct thread *, int fd, enum fd_search_filter flag);
 struct file_descriptor * retrieve_file(int fd);
 
@@ -166,8 +162,21 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       // pointers are valid, call sys_exec and save result to eax for the interrupt frame
-      f->eax = sys_exec((const char *)*(esp + 1));
+      f->eax = (uint32_t)sys_exec((const char *)*(esp + 1));
       break;
+    }
+  case SYS_OPEN:
+    {
+      // syscall1: Validate the pointer to the first and only argument on the stack
+      if(!is_valid_ptr((void*)(esp + 1)))
+        sys_exit(-1);
+
+      // Validate the dereferenced pointer to the buffer holding the filename
+      if(!is_valid_ptr((char *)*(esp + 1)))
+        sys_exit(-1);
+
+      // set return value of sys call to the file descriptor
+      f->eax = (uint32_t)sys_open((char *)*(esp + 1));
     }
 
   /* unhandled case */
@@ -180,12 +189,44 @@ syscall_handler (struct intr_frame *f)
   }
 }
 
+/* Opens the file called file. Returns a nonnegative integer handle called a "file descriptor" or -1 if the file could
+ * not be opened. The file descriptor will be the integer location of the file in the current thread's list of files
+ * */
+int sys_open(char * file)
+{
+  // obtain lock for filesystem since we are about to open the file
+  lock_acquire(&filesys_lock);
+
+  // open the file
+  struct file * new_file_struct = filesys_open(file);
+
+  // all done with file sys
+  lock_release(&filesys_lock);
+
+  // file will be null if file not found in file system
+  if (file==NULL){
+    // nothing to do here open fails, return -1
+    return -1;
+  }
+  // else add file to current threads list of open files
+  // from pintos notes section 3.3.4 System calls: when a single file is opened more than once, whether by a single
+  // process or different processes each open returns a new file descriptor. Different file descriptors for a single
+  // file are closed independently in seperate calls to close and they do not share a file position. We should make a
+  // list of files so if a single file is opened more than once we can close it without conflicts.
+  struct file_descriptor * new_thread_file = malloc(sizeof(struct file_descriptor));
+  new_thread_file->file_struct = new_file_struct;
+  new_thread_file->fd_num = thread_current()->next_fd;
+  thread_current()->next_fd++;
+  list_push_back(&thread_current()->open_files, &new_thread_file->list_elem);
+  return new_thread_file->fd_num;
+}
+
 int sys_exec (const char *cmdline){
   char * cmdline_cp;
   char * ptr;
   char * file_name;
   struct file * f;
-  int return_value;
+  pid_t return_value;
   // copy command line to parse and obtain filename to open
   cmdline_cp = malloc(strlen(cmdline)+1);
   strlcpy(cmdline_cp, cmdline, strlen(cmdline)+1);
@@ -205,12 +246,12 @@ int sys_exec (const char *cmdline){
   if (f==NULL){
     // nothing to do here exec fails, release lock and return -1
     lock_release(&filesys_lock);
-    return -1;
+    return (pid_t)-1;
   } else {
     // file exists, we can close file and call our implemented process_execute() to run the executable
     // note that process_execute accesses filesystem so hold onto lock until it is complete
     file_close(f);
-    return_value = process_execute(cmdline);
+    return_value = (pid_t)process_execute(cmdline);
     lock_release(&filesys_lock);
     return return_value;
   }
@@ -234,7 +275,6 @@ void sys_exit(int status) {
   //   // page allocation has failed in process_execute()
   // }
 }
-
 
 /* The kernel must be very careful about doing so, because the user can pass
  * a null pointer, a pointer to unmapped virtual memory, or a pointer to

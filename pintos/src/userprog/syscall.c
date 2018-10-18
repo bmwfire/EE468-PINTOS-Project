@@ -117,7 +117,7 @@ syscall_handler (struct intr_frame *f)
         sys_exit(-1);
 
       lock_acquire(&filesys_lock);
-      f->eax = filesys_remove(*(esp+1)))
+      f->eax = filesys_remove(*(esp+1)));
       lock_release(&filesys_lock);
       break;
     }

@@ -191,6 +191,8 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void *)(esp + 1)))
         sys_exit(-1);
 
+      printf("SYSCALL: SYS_FILESIZE: filename: %s\n", *(esp+1));
+
       f->eax = sys_filesize((int)(*(esp+1)));
       break;
     }
@@ -210,13 +212,18 @@ int sys_filesize(int fd_num)
   struct file_descriptor * file_desc;
   int returnval = -1;
 
+  printf("sys_filesize: retrieving file descriptor: %d\n", fd_num);
+
   // using the file filesystem => acquire lock
   lock_acquire(&filesys_lock);
 
   file_desc = retrieve_file(fd_num);
 
   if (file_desc != NULL)
+  {
+    printf("sys_filesize: retrieved file descriptor: %d\n", file_desc->fd_num);
     returnval = file_length(file_desc->file_struct);
+  }
   lock_release(&filesys_lock);
   return returnval;
 }
@@ -238,6 +245,7 @@ int sys_open(char * file)
   // file will be null if file not found in file system
   if (file==NULL){
     // nothing to do here open fails, return -1
+    printf("sys_open: file not found in filesystem \n");
     return -1;
   }
   // else add file to current threads list of open files
@@ -250,6 +258,7 @@ int sys_open(char * file)
   new_thread_file->fd_num = thread_current()->next_fd;
   thread_current()->next_fd++;
   list_push_back(&thread_current()->open_files, &new_thread_file->elem);
+  printf("sys_open: file found in filesystem. new file_descriptor number: %d \n", new_thread_file->fd_num);
   return new_thread_file->fd_num;
 }
 

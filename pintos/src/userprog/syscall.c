@@ -348,7 +348,6 @@ void sys_exit(int exit_status) {
        lock_acquire(&parent_thread->child_lock);
        child_status->exited = true;
        child_status->child_exit_status = exit_status;
-       cond_signal(&parent_thread->child_condition, &parent_thread->child_lock);
        lock_release(&parent_thread->child_lock);
      }
 
@@ -416,7 +415,8 @@ int sys_write(int fd, const void *buffer, unsigned size) {
   return bytes_written;
 }
 
-struct file_descriptor * retrieve_file(int fd){
+struct file_descriptor *
+retrieve_file(int fd){
   struct list_elem *list_element;
   struct file_descriptor *fd_struct;
   for(list_element = list_head(&thread_current()->open_files); list_element != list_tail(&thread_current()->open_files);
@@ -431,4 +431,26 @@ struct file_descriptor * retrieve_file(int fd){
     return fd_struct;
 
   return NULL;
+}
+
+void
+close_thread_files(tid_t tid)
+{
+  struct list_elem *elem;
+  struct list_elem *temp;
+  struct file_descriptor *file_desc;
+
+  elem = list_tail (&open_files);
+  while ((elem = list_prev (elem)) != list_head (&open_files))
+    {
+      temp = list_next(elem);
+      file_desc = list_entry(elem, struct file_descriptor, elem);
+      if (file_desc->owner == tid)
+      {
+        list_remove(elem);
+        file_close(file_desc->file_struct);
+        free(file_desc);
+      }
+      elem = next;
+    }
 }

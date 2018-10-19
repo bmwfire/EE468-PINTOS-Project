@@ -8,6 +8,7 @@
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
+#include "userprog/syscall.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
@@ -206,6 +207,10 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+  struct thread *parent_thread;
+  struct list_elem *e elem;
+  struct list_elem *e temp;
+  struct child_status *child;
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -223,6 +228,34 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+
+  elem = list_head(&cur->children);
+  while(elem != list_tail(&cur->children))
+  {
+    temp = list_next(elem);
+    child = list_entry(elem, struct child_status, elem_child_status);
+    list_remove(elem);
+    free(child);
+    elem = temp;
+  }
+
+  // don't forget to free the tail
+  child = list_entry(elem, struct child_status, elem_child_status);
+  list_remove(elem);
+  free(child);
+
+  // close the files that are opened by the current thread
+  close_thread_files(cur->tid);
+
+  parent_thread = thread_get_by_id(cur->parent_tid);
+  if (parent != NULL)
+  { // update status and signal parent
+    lock_acquire(&parent_thread->child_lock);
+    if (parent->child_load == 0)
+      parent->child_load = -1; // this may hapen if exitted mid load
+    cond_signal(&parent_thread->child_condition, &parent_thread->child_lock);
+    lock_release(&parent_thread->child_lock);
+  }
 }
 
 /* Sets up the CPU for running user code in the current

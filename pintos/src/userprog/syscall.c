@@ -342,10 +342,29 @@ void sys_exit(int exit_status) {
      struct list_elem *elem = list_head(&parent_thread->children);
 
      //first check the head
+     child_status = list_entry(elem, struct child_status, elem_child_status);
      if (child->child_tid == curr->tid)
+     {
+       lock_acquire(&parent_thread->child_lock);
+       child->exited = true;
+       child->exit_status = exit_status;
+       lock_release(&parent_thread->child_lock);
+     }
 
+     //and check the whole list too
+     while((elem = list_next(elem)) != list_tail(&parent_thread->children))
+     {
+       child_status = list_entry(elem, struct child_status, elem_child_status);
+       if (child->child_tid == curr->tid)
+       {
+         lock_acquire(&parent_thread->child_lock);
+         child->exited = true;
+         child->exit_status = exit_status;
+         lock_release(&parent_thread->child_lock);
+       }
+     }
    }
-
+   
   thread_exit();
 }
 

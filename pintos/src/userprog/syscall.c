@@ -331,7 +331,7 @@ void sys_halt(void) {
 void sys_exit(int exit_status) {
   struct child_status *child_status;
   struct thread *curr = thread_current();
-  struct thread *parent_thread = thread_get_by_id();
+  struct thread *parent_thread = thread_get_by_id(curr->parent_thread->tid);
 
   printf ("%s: exit(%d)\n", curr->name, exit_status);
 
@@ -343,7 +343,7 @@ void sys_exit(int exit_status) {
 
      //first check the head
      child_status = list_entry(elem, struct child_status, elem_child_status);
-     if (child->child_tid == curr->tid)
+     if (child_status->child_tid == curr->tid)
      {
        lock_acquire(&parent_thread->child_lock);
        child->exited = true;
@@ -355,7 +355,7 @@ void sys_exit(int exit_status) {
      while((elem = list_next(elem)) != list_tail(&parent_thread->children))
      {
        child_status = list_entry(elem, struct child_status, elem_child_status);
-       if (child->child_tid == curr->tid)
+       if (child_status->child_tid == curr->tid)
        {
          lock_acquire(&parent_thread->child_lock);
          child->exited = true;
@@ -364,7 +364,7 @@ void sys_exit(int exit_status) {
        }
      }
    }
-   
+
   thread_exit();
 }
 

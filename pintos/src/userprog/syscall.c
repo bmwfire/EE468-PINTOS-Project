@@ -92,7 +92,7 @@ syscall_handler (struct intr_frame *f)
       //printf("SYSCALL: SYS_EXIT \n");
       if(!is_valid_ptr((const void *)(esp + 1)))
         sys_exit(-1);
-      sys_exit((int)esp+1);
+      sys_exit((int)(esp+1));
       break;
     }
   case SYS_WAIT:

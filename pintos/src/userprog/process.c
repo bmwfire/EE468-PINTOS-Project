@@ -208,8 +208,8 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   struct thread *parent_thread;
-  struct list_elem *e elem;
-  struct list_elem *e temp;
+  struct list_elem *elem;
+  struct list_elem *temp;
   struct child_status *child;
 
   /* Destroy the current process's page directory and switch back
@@ -248,11 +248,11 @@ process_exit (void)
   close_thread_files(cur->tid);
 
   parent_thread = thread_get_by_id(cur->parent_tid);
-  if (parent != NULL)
+  if (parent_thread != NULL)
   { // update status and signal parent
     lock_acquire(&parent_thread->child_lock);
-    if (parent->child_load == 0)
-      parent->child_load = -1; // this may hapen if exitted mid load
+    if (parent_thread->child_load == 0)
+      parent_thread->child_load = -1; // this may hapen if exitted mid load
     cond_signal(&parent_thread->child_condition, &parent_thread->child_lock);
     lock_release(&parent_thread->child_lock);
   }

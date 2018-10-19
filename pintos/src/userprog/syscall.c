@@ -440,8 +440,8 @@ close_thread_files(tid_t tid)
   struct list_elem *temp;
   struct file_descriptor *file_desc;
 
-  elem = list_tail (&open_files);
-  while ((elem = list_prev (elem)) != list_head (&open_files))
+  elem = list_tail (&current_thread()->open_files);
+  while ((elem = list_prev (elem)) != list_head (&current_thread()->open_files))
     {
       temp = list_next(elem);
       file_desc = list_entry(elem, struct file_descriptor, elem);
@@ -451,6 +451,6 @@ close_thread_files(tid_t tid)
         file_close(file_desc->file_struct);
         free(file_desc);
       }
-      elem = next;
+      elem = temp;
     }
 }

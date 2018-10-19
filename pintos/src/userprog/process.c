@@ -229,7 +229,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
 
-  elem = list_head(&cur->children);
+  elem = list_begin(&cur->children);
   while(elem != list_tail(&cur->children))
   {
     temp = list_next(elem);

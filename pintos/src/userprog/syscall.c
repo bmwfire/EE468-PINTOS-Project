@@ -348,6 +348,7 @@ void sys_exit(int exit_status) {
        lock_acquire(&parent_thread->child_lock);
        child_status->exited = true;
        child_status->child_exit_status = exit_status;
+       cond_signal(&parent_thread->child_condition, &parent_thread->child_lock);
        lock_release(&parent_thread->child_lock);
      }
 

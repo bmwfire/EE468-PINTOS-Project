@@ -27,38 +27,21 @@
 
 
 static void syscall_handler (struct intr_frame *);
-
-struct lock filesys_lock;
-
-struct lock filesys_lock;
-
 bool is_valid_ptr(const void *user_ptr);
-
 struct lock filesys_lock;
-
-struct file_descriptor * retrieve_file(int fd);
-
 struct file_descriptor{
   int fd_num;
   tid_t owner;
   struct file *file_struct;
   struct list_elem elem;
 };
+struct file_descriptor * retrieve_file(int fd);
 
 void
 syscall_init (void)
 {
   lock_init(&filesys_lock);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-}
-
-// in case of invalid memory access, fail and exit.
-static void fail_invalid_access(void) {
-  if (lock_held_by_current_thread(&filesys_lock))
-    lock_release (&filesys_lock);
-
-  sys_exit (-1);
-  NOT_REACHED();
 }
 
 static void

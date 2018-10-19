@@ -265,6 +265,7 @@ int sys_open(char * file_name)
   struct file_descriptor * new_thread_file = malloc(sizeof(struct file_descriptor));
   new_thread_file->file_struct = new_file_struct;
   new_thread_file->fd_num = thread_current()->next_fd;
+  new_thread_file->owner = thread_current()->tid;
   thread_current()->next_fd++;
   list_push_back(&thread_current()->open_files, &new_thread_file->elem);
   //printf("sys_open: file found in filesystem. new file_descriptor number: %d \n", new_thread_file->fd_num);

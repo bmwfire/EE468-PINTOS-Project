@@ -239,10 +239,10 @@ process_exit (void)
     elem = temp;
   }
 
-  // don't forget to free the tail
-  child = list_entry(elem, struct child_status, elem_child_status);
-  list_remove(elem);
-  free(child);
+  // // don't forget to free the tail
+  // child = list_entry(elem, struct child_status, elem_child_status);
+  // list_remove(elem);
+  // free(child);
 
   // close the files that are opened by the current thread
   close_thread_files(cur->tid);

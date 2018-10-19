@@ -382,9 +382,9 @@ bool is_valid_ptr(const void *user_ptr)
     return (pagedir_get_page(curr->pagedir, user_ptr)) != NULL;
   }
   if(user_ptr == NULL){
-    printf("Pointer is NULL\n");
+    //printf("Pointer is NULL\n");
   }else{
-    printf("Pointer is not user address space\n");
+    //printf("Pointer is not user address space\n");
   }
   return false;
 }

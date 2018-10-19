@@ -145,14 +145,14 @@ process_wait (tid_t child_tid)
 
   if(child_tid != TID_ERROR){
     cur = thread_current();
-    printf("process_wait: waiting for thread \n");
+    //printf("process_wait: waiting for thread \n");
     //search through children for children
     struct list_elem *elem = list_tail(&cur->children);//set the focus to the child at the tail of children
     do{
       child = list_entry(elem, struct child_status, elem_child_status);
       if(child->child_tid == child_tid){//check if the child is the one we want
         child_found = 1;//flag that the child was found
-        printf("process_wait: child found\n");
+        //printf("process_wait: child found\n");
         break;//finish while loop so child is not overwritten
       }
       elem = list_prev(elem);//since our child was not found, move onto next child
@@ -161,7 +161,7 @@ process_wait (tid_t child_tid)
     if(child_found == 0){//repeat loop for head if child still not found
       child = list_entry(elem, struct child_status, elem_child_status);
       if(child->child_tid == child_tid){
-        printf("process_wait: child found head\n");
+        //printf("process_wait: child found head\n");
         child_found = 1;
       }
     }
@@ -169,23 +169,23 @@ process_wait (tid_t child_tid)
     //check if we found the child
     //return -1 if we didnt find the children
     if(child_found == 0){
-      printf("process_wait: your child is missing! \n");
+      //printf("process_wait: your child is missing! \n");
       return -1;
     }else{//code for waiting
         lock_acquire(&cur->child_lock);//acquire lock since editing child
         while(thread_get_by_id(child_tid) != NULL){//loop when child is alive
-          printf("process_wait: child is still alive (...so needy): wait till it dies \n");
+          //printf("process_wait: child is still alive (...so needy): wait till it dies \n");
           cond_wait(&cur->child_condition, &cur->child_lock);//release lock, reacquire when signaled by child
         }
         //if child hasn't called its exit or has been waited by the same process then return -1
         if(!child->exited || child->has_been_waited){
-          printf("process_wait: either child is not exited or has been waited\n");
+          //printf("process_wait: either child is not exited or has been waited\n");
           lock_release(&cur->child_lock);//release lock since finished editing child
           return -1;
         }
         else{
           //ready the return variable as the child's exit status
-          printf("process_wait: child died and its last words were: %d \n", child->child_exit_status);
+          //printf("process_wait: child died and its last words were: %d \n", child->child_exit_status);
           ret = child->child_exit_status;
           //mark child as waited
           child->has_been_waited = true;
@@ -194,7 +194,7 @@ process_wait (tid_t child_tid)
     }
 
   }else{
-    printf("process_wait: TID_ERROR \n");
+    //printf("process_wait: TID_ERROR \n");
     return TID_ERROR;//return TID_ERROR since child tid is TID_ERROR
   }
 

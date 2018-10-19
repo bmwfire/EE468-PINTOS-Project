@@ -173,6 +173,7 @@ process_wait (tid_t child_tid)
         }
         //if child hasn't called its exit or has been waited by the same process then return -1
         if(!child->exited || child->has_been_waited){
+          lock_release(&cur->child_lock);//release lock since finished editing child
           return -1;
         }
         else{

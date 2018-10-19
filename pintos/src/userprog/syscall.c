@@ -90,7 +90,8 @@ syscall_handler (struct intr_frame *f)
   case SYS_EXIT:
     {
       //printf("SYSCALL: SYS_EXIT \n");
-      //is_valid_ptr(esp+1);
+      if(!is_valid_ptr((const void *)(esp + 1)))
+        sys_exit(-1);
       sys_exit((int)esp+1);
       break;
     }
@@ -327,9 +328,25 @@ void sys_halt(void) {
   shutdown_power_off();
 }
 
-void sys_exit(int status) {
+void sys_exit(int exit_status) {
+  struct child_status *child_status;
+  struct thread *curr = thread_current();
+  struct thread *parent_thread = thread_get_by_id();
+
+  printf ("%s: exit(%d)\n", curr->name, exit_status);
+
+  if (parent_thread != NULL)
+   {
+     // iterate through parent's child list to find current thread's entry
+     // to update its status
+     struct list_elem *elem = list_head(&parent_thread->children);
+
+     //first check the head
+     if (child->child_tid == curr->tid)
+
+   }
+
   thread_exit();
-  // TODO
 }
 
 /* The kernel must be very careful about doing so, because the user can pass

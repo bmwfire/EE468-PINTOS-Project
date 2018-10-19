@@ -347,7 +347,7 @@ void sys_exit(int exit_status) {
      {
        lock_acquire(&parent_thread->child_lock);
        child_status->exited = true;
-       child_status->exit_status = exit_status;
+       child_status->exit_status = child_exit_status;
        lock_release(&parent_thread->child_lock);
      }
 
@@ -359,7 +359,7 @@ void sys_exit(int exit_status) {
        {
          lock_acquire(&parent_thread->child_lock);
          child_status->exited = true;
-         child_status->exit_status = exit_status;
+         child_status->exit_status = child_exit_status;
          lock_release(&parent_thread->child_lock);
        }
      }

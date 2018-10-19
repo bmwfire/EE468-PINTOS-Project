@@ -77,13 +77,13 @@ syscall_handler (struct intr_frame *f)
   // Dispatch w.r.t system call number
   // SYS_*** constants are defined in syscall-nr.h
   switch (*esp) {
-  case SYS_HALT:
+  case SYS_HALT: //1
     {
       //printf("SYSCALL: SYS_HALT \n");
       sys_halt();
       break;
     }
-  case SYS_EXIT:
+  case SYS_EXIT: //2
     {
       //printf("SYSCALL: SYS_EXIT \n");
       if(!is_valid_ptr((const void *)(esp + 1)))
@@ -91,7 +91,7 @@ syscall_handler (struct intr_frame *f)
       sys_exit((int)*(esp+1));
       break;
     }
-  case SYS_WAIT:
+  case SYS_WAIT: //3
     {
       if(is_valid_ptr((const void*) (esp+1))){//Make sure this check is appropriate
         f->eax = process_wait(*(esp + 1));//
@@ -100,12 +100,9 @@ syscall_handler (struct intr_frame *f)
       }
       break;
     }
-    case SYS_CREATE:
+    case SYS_CREATE: //4
     {
       if(!is_valid_ptr((const void*) (esp+5)))
-        sys_exit(-1);
-
-      if(!is_valid_ptr((const void*) (esp+4)))
         sys_exit(-1);
 
       if(!is_valid_ptr((const void*) *(esp+4)))
@@ -119,12 +116,12 @@ syscall_handler (struct intr_frame *f)
 
       break;
     }
-  case SYS_REMOVE:
+  case SYS_REMOVE: //5
     {
-      if(!is_valid_ptr((const void*) (esp+4)))
+      if(!is_valid_ptr((const void*) (esp+1)))
         sys_exit(-1);
 
-      if(!is_valid_ptr((const void*) *(esp+4)))
+      if(!is_valid_ptr((const void*) *(esp+1)))
         sys_exit(-1);
 
       //printf("SYSCALL: SYS_REMOVE: filename: %s\n", *(esp+1));
@@ -134,7 +131,7 @@ syscall_handler (struct intr_frame *f)
       lock_release(&filesys_lock);
       break;
     }
-  case SYS_WRITE:
+  case SYS_WRITE: //6
     {
       //printf("WRITE: starting syswrite with esp = %d\n", *esp);
       if(is_valid_ptr((const void*)(esp+5)) && is_valid_ptr( (const void*) (esp+6)) && is_valid_ptr((const void*)(esp+7)))
@@ -162,7 +159,7 @@ syscall_handler (struct intr_frame *f)
       }
       break;
     }
-  case SYS_READ:
+  case SYS_READ: //7
     {
       //printf("READ: starting syswrite with esp = %d\n", *esp);
       if(is_valid_ptr((const void*)(esp+5)) && is_valid_ptr( (const void*) (esp+6)) && is_valid_ptr((const void*)(esp+7)))
@@ -191,7 +188,7 @@ syscall_handler (struct intr_frame *f)
       }
       break;
     }
-  case SYS_SEEK:
+  case SYS_SEEK: //8
     {
       if(!is_valid_ptr((const void *)(esp + 4)))
         sys_exit(-1);
@@ -199,18 +196,22 @@ syscall_handler (struct intr_frame *f)
       if(!is_valid_ptr((const void *)(esp + 5)))
         sys_exit(-1);
 
+      lock_acquire(&filesys_lock);
       sys_seek((int)(*(esp+4)), (unsigned)(*(esp+5)));
+      lock_release(&filesys_lock);
       break;
     }
-  case SYS_TELL: /* This final system call doesn't seem to affect anything */
+  case SYS_TELL: //9* This final system call doesn't seem to affect anything */
     {
       if(!is_valid_ptr((const void *)(esp + 1)))
         sys_exit(-1);
 
+      lock_acquire(&filesys_lock);
       f->eax = sys_tell((int)(*(esp + 1)));
+      lock_release(&filesys_lock);
       break;
     }
-  case SYS_EXEC:
+  case SYS_EXEC: //10
     {
       // Validate the pointer to the first argument on the stack
       if(!is_valid_ptr((void*)(esp + 1)))
@@ -225,7 +226,7 @@ syscall_handler (struct intr_frame *f)
       f->eax = (uint32_t)sys_exec((const char *)*(esp + 1));
       break;
     }
-  case SYS_OPEN:
+  case SYS_OPEN: //11
     {
       // syscall1: Validate the pointer to the first and only argument on the stack
       if(!is_valid_ptr((const void*)(esp + 1)))
@@ -238,27 +239,33 @@ syscall_handler (struct intr_frame *f)
       //printf("SYSCALL: SYS_OPEN: filename: %s\n", *(esp+1));
 
       // set return value of sys call to the file descriptor
+      lock_acquire(&filesys_lock);
       f->eax = (uint32_t)sys_open((char *)*(esp + 1));
+      lock_release(&filesys_lock);
       break;
     }
-  case SYS_FILESIZE: //syscall 7: 1 arg. arg[1] is the fd number
+  case SYS_FILESIZE: //12 - syscall 7: 1 arg. arg[1] is the fd number
     {
       if(!is_valid_ptr((const void *)(esp + 1)))
         sys_exit(-1);
 
       //printf("SYSCALL: SYS_FILESIZE: fd_num: %d\n", *(esp+1));
-
+      lock_acquire(&filesys_lock);
       f->eax = sys_filesize((int)(*(esp+1)));
+      lock_release(&filesys_lock);
       break;
     }
-  case SYS_CLOSE:
+  case SYS_CLOSE: //13
   {
     if(!is_valid_ptr((const void *)(esp + 1)))
       sys_exit(-1);
 
+    lock_acquire(&filesys_lock);
     sys_close((int)(*(esp+1)));
+    lock_release(&filesys_lock);
     break;
   }
+
 
   /* unhandled case */
   default:

@@ -28,7 +28,6 @@ typedef int tid_t;
 struct child_status {
   tid_t child_tid;
   bool exited;
-  bool waiting;
   bool has_been_waited;
   int child_exit_status;
   struct list_elem elem_child_status;

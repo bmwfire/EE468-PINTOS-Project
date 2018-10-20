@@ -69,7 +69,7 @@ process_execute (const char *cmdline)
      child = calloc(1, sizeof(struct child_status));
      child->child_tid = tid;
      child->exited = false;
-     child->waiting = false;
+     child->has_been_waited = false;
      // add new child thread to parents list of children
      list_push_back(&thread_current()->children, &child->elem_child_status);
    }
